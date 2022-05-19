@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=1080px" />
+    <title>在线简单井网部署</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
+  </head>
+  <style>
+    .el-form-item__label {
+      text-align: left;
+    }
+    [v-cloak] {
+      display: none;
+    }
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+    }
+    #app {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+    .wells {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+      margin: 10px;
+      position: relative;
+    }
+    .settings {
+      display: flex;
+      flex-direction: column;
+    }
+    .line {
+      display: flex;
+    }
+    .line:last-child {
+      margin-bottom: 0 !important;
+    }
+    .item {
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    .line > .item:first-child {
+      margin-left: 0 !important;
+    }
+    /* @media screen and (min-width: 950px) {
+      .wells{
+        flex: 0.8;
+        height: 90%;
+      }
+      .settings {
+        align-items: center;
+        padding: 20px;
+        min-width: 350px;
+      }
+      .settings > * {
+        width: 100%;
+      }
+    }
+    @media screen and (max-width: 950px) {
+      .el-form-item{
+        width: 100% !important;
+      }
+      .column {
+        display: flex;
+        flex-direction: column;
+      }
+      #app {
+        flex-direction: column;
+        justify-content: center;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      .wells {
+        width: 100% !important;
+        min-height: 640px;
+      }
+      .settings {
+        padding-top: 20px;
+      }
+    } */
+    .wells {
+      flex: 0.8;
+      height: 90%;
+    }
+    .settings {
+      align-items: center;
+      padding: 20px;
+      min-width: 350px;
+    }
+    .settings > * {
+      width: 100%;
+    }
+  </style>
+  <body>
+    <div id="app">
+      <div class="wells">
+        <div class="lines-container">
+          <div class="line" v-for="n in form.lines" :style='{"margin-bottom": 15*form.gap+"px"}'>
+            <item
+              v-for="n in form.columns"
+              :water="form.wwType"
+              :oil="form.owType"
+              :style='{"margin-left": 15*form.gap+"px"}'
+            ></item>
+          </div>
+        </div>
+      </div>
+      <el-form class="settings" ref="form" :model="form">
+        <el-form-item label="行数：">
+          <el-input-number
+            size="small"
+            v-model="form.lines"
+            :min="1"
+            label="行数："
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item label="列数：">
+          <el-input-number
+            size="small"
+            v-model="form.columns"
+            :min="1"
+            label="列数："
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item label="间距倍数：">
+          <el-input-number
+            size="small"
+            v-model="form.gap"
+            :min="0.2"
+            :step="0.2"
+            label="间距倍数："
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item class="column" label="采油井类型：">
+          <el-select size="small" v-model="form.owType" placeholder="请选择">
+            <el-option
+              v-for="type in form.wTypes"
+              :label="type.name"
+              :value="type.url"
+              :key="type.url"
+            >
+              <img :src="type.url" />
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item class="column" label="注水井类型：">
+          <el-select size="small" v-model="form.wwType" placeholder="请选择">
+            <el-option
+              v-for="type in form.wTypes"
+              :label="type.name"
+              :value="type.url"
+              :key="type.url"
+            >
+              <img :src="type.url" />
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-cloak>
+          <el-button size="medium" type="primary" @click="reset">重置</el-button>
+          <!-- <el-button size="medium" type="primary">清空</el-button> -->
+          <el-button size="medium" type="success" @click="exportPng">导出图片</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <script src="https://unpkg.com/vue@2"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="./utils/html2canvas.min.js"></script>
+    <script src="./utils/FileSaver.js"></script>
+    <script>
+      Vue.component("item", {
+        data: function () {
+          return {
+            state: false,
+          };
+        },
+        props: ["water", "oil"],
+        template: '<img :src="state ? water : oil" class="item" @click="state=!state"></img>',
+      });
+      var app = new Vue({
+        el: "#app",
+        data: {
+          form: {
+            lines: 10,
+            columns: 10,
+            gap: 1,
+            owType: "./img/round.svg",
+            wwType: "./img/close-one.svg",
+            wTypes: [
+              {
+                name: "asterisk",
+                url: "./img/asterisk.svg",
+              },
+              {
+                name: "circles-and-triangles",
+                url: "./img/circles-and-triangles.svg",
+              },
+              {
+                name: "close-one",
+                url: "./img/close-one.svg",
+              },
+              {
+                name: "close-small",
+                url: "./img/close-small.svg",
+              },
+              {
+                name: "dot",
+                url: "./img/dot.svg",
+              },
+              {
+                name: "handle-round",
+                url: "./img/handle-round.svg",
+              },
+              {
+                name: "round",
+                url: "./img/round.svg",
+              },
+            ],
+          },
+        },
+        methods: {
+          reset: function () {
+            this.form.lines = 10;
+            this.form.columns = 10;
+            this.form.gap = 1;
+            this.form.owType = "./img/round.svg";
+            this.form.wwType = "./img/close-one.svg";
+          },
+          exportPng: function () {
+            html2canvas(document.querySelector(".lines-container")).then(function (canvas) {
+              canvas.toBlob(function (blob) {
+                saveAs(blob, "well-pattern-arrangement.png");
+              });
+            });
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
