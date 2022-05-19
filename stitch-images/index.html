@@ -157,7 +157,8 @@
         },
         jointImg: function (e) {
           let files = e.target.files;
-          for (let i = 0; i < files.length; i++) {
+          for (let i = files.length-1; i > -1; i--) {
+          // for (let i = 0; i < files.length; i++) {
             let src = URL.createObjectURL(files[i]);
             let next = e.target.parentNode.parentNode.parentNode.nextSibling;
             let container = document.createElement('div');
